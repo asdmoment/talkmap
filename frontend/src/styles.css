@@ -1,0 +1,430 @@
+:root {
+  font-family: 'Avenir Next', 'SF Mono', 'Menlo', monospace;
+  color: #16343a;
+  background:
+    radial-gradient(circle at top left, rgba(79, 156, 155, 0.16), transparent 32%),
+    linear-gradient(180deg, #f4ecdc 0%, #e9dcc4 100%);
+  --paper: rgba(251, 246, 237, 0.82);
+  --paper-strong: rgba(255, 250, 242, 0.94);
+  --ink: #17343b;
+  --muted: #5f675f;
+  --teal: #0f7c7a;
+  --line: rgba(23, 52, 59, 0.12);
+  --shadow: 0 24px 80px rgba(69, 56, 31, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06));
+  opacity: 0.45;
+  mix-blend-mode: soft-light;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  position: relative;
+  width: min(1240px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.paper-glow {
+  position: absolute;
+  inset: 1rem 0 auto auto;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15, 124, 122, 0.22), transparent 68%);
+  filter: blur(12px);
+}
+
+.masthead,
+.recorder-bar,
+.pane {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.masthead {
+  padding: 1.4rem 1.4rem 1.8rem;
+  border-radius: 1.6rem 1.6rem 0.9rem 0.9rem;
+}
+
+.eyebrow,
+.section-kicker,
+.status-pill,
+.pane-surface,
+.pane-copy,
+.deck {
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+
+.eyebrow,
+.section-kicker {
+  margin: 0 0 0.45rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--teal);
+}
+
+.masthead h1,
+.recorder-bar h2,
+.pane h2 {
+  margin: 0;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-weight: 600;
+  line-height: 0.95;
+}
+
+.masthead h1 {
+  font-size: clamp(3.3rem, 9vw, 6.4rem);
+}
+
+.deck {
+  max-width: 52rem;
+  margin: 0.9rem 0 0;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.recorder-bar {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: 0.9rem 0.9rem 1.4rem 1.4rem;
+}
+
+.recorder-bar h2,
+.pane h2 {
+  font-size: 2.2rem;
+}
+
+.recorder-status-block {
+  display: grid;
+  align-content: center;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
+.recorder-toggle {
+  margin-top: 1rem;
+  padding: 0.78rem 1rem;
+  border: 1px solid rgba(23, 52, 59, 0.14);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 247, 0.96) 0%, rgba(241, 232, 214, 0.92) 100%);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(23, 52, 59, 0.08);
+  font: inherit;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+.recorder-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(23, 52, 59, 0.12);
+}
+
+.recorder-toggle:focus-visible {
+  outline: 2px solid rgba(15, 124, 122, 0.45);
+  outline-offset: 3px;
+}
+
+.status-pill {
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(15, 124, 122, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 124, 122, 0.1);
+  color: var(--teal);
+}
+
+.status-pill-listening,
+.status-pill-speaking {
+  border-color: rgba(15, 124, 122, 0.28);
+  background: rgba(15, 124, 122, 0.14);
+}
+
+.status-pill-speaking {
+  color: #7b3f10;
+  border-color: rgba(162, 91, 34, 0.24);
+  background: rgba(162, 91, 34, 0.14);
+}
+
+.status-pill-error {
+  color: #8f2d1b;
+  border-color: rgba(143, 45, 27, 0.24);
+  background: rgba(143, 45, 27, 0.12);
+}
+
+.status-copy,
+.pane-copy {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.pane-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pane {
+  min-height: 24rem;
+  padding: 1.15rem;
+  border-radius: 1.4rem;
+}
+
+.pane-header {
+  margin-bottom: 0.9rem;
+}
+
+.pane-surface {
+  position: relative;
+  min-height: 13rem;
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(23, 52, 59, 0.08);
+  background: var(--paper-strong);
+  color: var(--ink);
+}
+
+.pane-surface-ruled {
+  background-image: linear-gradient(to bottom, rgba(15, 124, 122, 0.08) 1px, transparent 1px);
+  background-size: 100% 2.2rem;
+}
+
+.transcript-surface,
+.summary-surface,
+.constellation-surface {
+  overflow: hidden;
+}
+
+.transcript-empty,
+.summary-empty,
+.mindmap-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.transcript-line {
+  position: relative;
+  margin-bottom: 1rem;
+  padding-left: 0.9rem;
+}
+
+.transcript-line:last-child {
+  margin-bottom: 0;
+}
+
+.transcript-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(15, 124, 122, 0.22);
+}
+
+.transcript-line-partial::before {
+  background: rgba(162, 91, 34, 0.35);
+}
+
+.transcript-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.transcript-index,
+.transcript-live-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.18rem 0.38rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 124, 122, 0.18);
+  background: rgba(15, 124, 122, 0.08);
+  color: var(--teal);
+}
+
+.transcript-live-pill {
+  border-color: rgba(162, 91, 34, 0.2);
+  background: rgba(162, 91, 34, 0.1);
+  color: #8b4c19;
+}
+
+.transcript-line p {
+  margin: 0;
+  padding-right: 0.2rem;
+  line-height: 1.7;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: 1.02rem;
+}
+
+.summary-surface {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.summary-card,
+.summary-cluster {
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(23, 52, 59, 0.08);
+  border-radius: 0.9rem;
+  background: rgba(255, 252, 247, 0.84);
+}
+
+.summary-card-overview {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.95), rgba(242, 235, 219, 0.92));
+}
+
+.summary-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.summary-card h3,
+.summary-cluster h3 {
+  margin: 0 0 0.55rem;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-size: 1.3rem;
+}
+
+.summary-card p,
+.summary-list {
+  margin: 0;
+  line-height: 1.65;
+}
+
+.summary-list {
+  padding-left: 1rem;
+}
+
+.summary-list li + li {
+  margin-top: 0.45rem;
+}
+
+.summary-cluster-actions {
+  border-color: rgba(162, 91, 34, 0.14);
+}
+
+.constellation-surface {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(15, 124, 122, 0.18), transparent 18%),
+    radial-gradient(circle at 70% 40%, rgba(23, 52, 59, 0.1), transparent 24%),
+    var(--paper-strong);
+}
+
+.mindmap-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mindmap-edge {
+  fill: none;
+  stroke: rgba(15, 124, 122, 0.38);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 4 8;
+}
+
+.mindmap-node {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.75rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  background: #fffdf7;
+  border: 1px solid rgba(23, 52, 59, 0.12);
+  box-shadow: 0 12px 24px rgba(23, 52, 59, 0.08);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 980px) {
+  .recorder-bar,
+  .pane-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pane {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100% - 1rem, 1240px);
+    padding: 1rem 0 2rem;
+  }
+
+  .masthead,
+  .recorder-bar,
+  .pane {
+    padding: 1rem;
+  }
+
+  .recorder-bar h2,
+  .pane h2 {
+    font-size: 1.8rem;
+  }
+
+  .transcript-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mindmap-node {
+    min-width: auto;
+    max-width: 8.5rem;
+    text-align: center;
+  }
+}

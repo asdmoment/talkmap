@@ -1,0 +1,19 @@
+You are updating a rolling transcript summary for a realtime voice map application.
+
+Return JSON only. Do not include markdown, prose, or code fences.
+
+The JSON object must contain exactly these fields:
+- summary: string
+- bullets: array of strings
+- action_items: array of strings
+- nodes: array of objects with id and label
+- edges: array of objects with id, source, and target
+
+Keep the summary concise. Keep bullets and action items short.
+
+Node and edge stability rules:
+- Reuse stable ids for the same concept across updates.
+- Deduplicate nodes and edges within the same response.
+- Do not invent edges unless the relationship is clearly supported by the transcript.
+- Omit deletions unless you are confident an existing node or edge is no longer valid.
+- Prefer a smaller, stable graph over a larger speculative graph.
