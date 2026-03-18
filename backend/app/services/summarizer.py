@@ -26,6 +26,7 @@ class StrictMindmapEdge(BaseModel):
 class RollingSummaryPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    title: str
     summary: str
     bullets: list[str]
     action_items: list[str]
@@ -34,6 +35,7 @@ class RollingSummaryPayload(BaseModel):
 
 
 class RollingSummaryResult(BaseModel):
+    title: str
     summary: str
     bullets: list[str]
     action_items: list[str]
@@ -84,6 +86,7 @@ class RollingSummarizerService:
         summary_blocks = _build_summary_blocks(payload)
 
         result = RollingSummaryResult(
+            title=payload.title,
             summary=payload.summary,
             bullets=payload.bullets,
             action_items=payload.action_items,

@@ -43,6 +43,7 @@ def anyio_backend() -> str:
 async def test_summarizer_returns_validated_result_and_events() -> None:
     client = FakeLlmClient(
         {
+            "title": "Launch Discussion",
             "summary": "Discussed launch scope and owners.",
             "bullets": ["Finalize timeline", "Review open risks"],
             "action_items": ["Sam sends recap"],
@@ -113,6 +114,7 @@ async def test_summarizer_returns_validated_result_and_events() -> None:
 async def test_summarizer_rejects_invalid_llm_payload() -> None:
     client = FakeLlmClient(
         {
+            "title": "Test Title",
             "summary": "Missing graph edges field.",
             "bullets": [],
             "action_items": [],
@@ -138,6 +140,7 @@ async def test_summarizer_rejects_invalid_llm_payload() -> None:
 async def test_summarizer_rejects_extra_top_level_keys() -> None:
     client = FakeLlmClient(
         {
+            "title": "Test Title",
             "summary": "Good summary.",
             "bullets": [],
             "action_items": [],
@@ -164,6 +167,7 @@ async def test_summarizer_rejects_extra_top_level_keys() -> None:
 async def test_summarizer_rejects_extra_nested_node_and_edge_keys() -> None:
     client = FakeLlmClient(
         {
+            "title": "Test Title",
             "summary": "Good summary.",
             "bullets": [],
             "action_items": [],
@@ -198,6 +202,7 @@ async def test_summarizer_caches_prompt_at_construction_time(tmp_path: Path) -> 
     prompt_path.write_text("first prompt", encoding="utf-8")
     client = FakeLlmClient(
         {
+            "title": "Test Title",
             "summary": "Good summary.",
             "bullets": [],
             "action_items": [],
@@ -233,7 +238,7 @@ async def test_summarizer_accepts_openai_compatible_json_client() -> None:
                 "choices": [
                     {
                         "message": {
-                            "content": '{"summary":"ok","bullets":[],"action_items":[],"nodes":[],"edges":[]}'
+                            "content": '{"title":"Test","summary":"ok","bullets":[],"action_items":[],"nodes":[],"edges":[]}'
                         }
                     }
                 ]

@@ -151,6 +151,7 @@ async def session_websocket(
             return
 
         session_store.replace_summary_blocks(session_id, summary_result.summary_blocks)
+        session_store.set_title(session_id, summary_result.title)
         session_store.replace_mindmap(
             session_id,
             summary_result.nodes,

@@ -64,6 +64,7 @@ class FakeSummarizerService:
     ) -> RollingSummaryResult:
         self.calls.append(committed_segments)
         return RollingSummaryResult(
+            title="Test Title",
             summary="Overview text",
             bullets=["Bullet one"],
             action_items=["Action one"],
@@ -217,7 +218,7 @@ def test_session_websocket_processes_utterances_and_persists_runtime_updates(
     ]
     assert store.get_snapshot(session_id).model_dump(mode="json") == {
         "session_id": session_id,
-        "title": None,
+        "title": "Test Title",
         "partial_segments": [],
         "committed_segments": [
             {"id": "utt-1:0", "text": "final summary", "start_ms": 0, "end_ms": 900}
@@ -335,6 +336,7 @@ def test_session_websocket_continues_transcribing_while_summary_is_in_flight(
                 await asyncio.to_thread(self.release_first_call.wait, 5)
 
             return RollingSummaryResult(
+                title="Test Title",
                 summary="Overview text",
                 bullets=["Bullet one"],
                 action_items=["Action one"],
@@ -427,6 +429,7 @@ def test_session_websocket_keeps_latest_summary_when_tasks_finish_out_of_order(
                 label = "second summary"
 
             return RollingSummaryResult(
+                title=label,
                 summary=label,
                 bullets=[],
                 action_items=[],
