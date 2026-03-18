@@ -23,6 +23,7 @@ def get_session_store(settings: Settings = Depends(get_settings)) -> SessionStor
 
 class SessionListItem(BaseModel):
     session_id: str
+    title: str | None = None
     created_at: str
     segment_count: int
 
@@ -110,6 +111,7 @@ def list_sessions(
         items.append(
             SessionListItem(
                 session_id=session_id,
+                title=snapshot.title,
                 created_at=created_at,
                 segment_count=len(snapshot.committed_segments),
             )

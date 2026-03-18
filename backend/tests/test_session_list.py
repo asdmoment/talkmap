@@ -41,6 +41,24 @@ def test_list_sessions_returns_items():
             app.dependency_overrides.pop(get_session_store, None)
 
 
+def test_list_sessions_includes_title():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        store = SessionStore(root_dir=tmp_dir)
+        store.ensure_snapshot("session-titled")
+        store.set_title("session-titled", "我的会话")
+        store.flush("session-titled")
+        app.dependency_overrides[get_session_store] = lambda: store
+        try:
+            client = TestClient(app)
+            response = client.get("/api/sessions")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data) == 1
+            assert data[0]["title"] == "我的会话"
+        finally:
+            app.dependency_overrides.pop(get_session_store, None)
+
+
 def test_delete_session_success():
     with tempfile.TemporaryDirectory() as tmp_dir:
         store = SessionStore(root_dir=tmp_dir)
