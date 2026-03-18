@@ -37,6 +37,7 @@ def test_session_websocket_emits_initial_session_started_event(tmp_path) -> None
     assert event["session_id"].startswith("session-")
     assert event["snapshot"] == {
         "session_id": event["session_id"],
+        "title": None,
         "partial_segments": [],
         "committed_segments": [],
         "summary_blocks": [],

@@ -33,6 +33,7 @@ class MindmapEdge(BaseModel):
 
 class SessionSnapshot(BaseModel):
     session_id: str
+    title: str | None = None
     partial_segments: list[PartialSegment] = Field(default_factory=list)
     committed_segments: list[CommittedSegment] = Field(default_factory=list)
     summary_blocks: list[SummaryBlock] = Field(default_factory=list)

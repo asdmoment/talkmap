@@ -89,6 +89,12 @@ class SessionStore:
         self._mark_dirty(session_id)
         return snapshot
 
+    def set_title(self, session_id: str, title: str) -> SessionSnapshot:
+        snapshot = self.get_snapshot(session_id)
+        snapshot.title = title
+        self._mark_dirty(session_id)
+        return snapshot
+
     def append_summary_block(
         self, session_id: str, block: SummaryBlock
     ) -> SessionSnapshot:

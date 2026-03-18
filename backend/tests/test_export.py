@@ -50,6 +50,7 @@ def test_export_json_returns_structured_session_snapshot(tmp_path) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "session_id": "session-export",
+        "title": None,
         "partial_segments": [],
         "committed_segments": [
             {
