@@ -27,7 +27,7 @@ describe('MindMapPane', () => {
   it('shows an editorial empty state before graph updates arrive', () => {
     render(<MindMapPane />);
 
-    expect(screen.getByText('Waiting for the first theme to branch into view.')).toBeInTheDocument();
+    expect(screen.getByText('当系统识别出主题关系后，这里会生成你的思路图。')).toBeInTheDocument();
   });
 
   it('treats explicit empty props as an instruction to clear the graph', () => {
@@ -39,6 +39,6 @@ describe('MindMapPane', () => {
     render(<MindMapPane nodes={[]} edges={[]} />);
 
     expect(screen.queryByText('Research')).not.toBeInTheDocument();
-    expect(screen.getByText('Waiting for the first theme to branch into view.')).toBeInTheDocument();
+    expect(screen.getByText('当系统识别出主题关系后，这里会生成你的思路图。')).toBeInTheDocument();
   });
 });

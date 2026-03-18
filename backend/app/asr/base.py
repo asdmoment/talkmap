@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from app.asr.audio_payload import BrowserUtteranceAudio
+
 
 @dataclass(frozen=True)
 class TranscriptionSegment:
@@ -18,4 +20,6 @@ class TranscriptionSegment:
 
 
 class AsrEngine(Protocol):
-    def transcribe(self, audio: object) -> list[TranscriptionSegment]: ...
+    def transcribe(
+        self, audio: BrowserUtteranceAudio
+    ) -> list[TranscriptionSegment]: ...

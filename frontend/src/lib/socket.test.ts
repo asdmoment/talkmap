@@ -212,4 +212,63 @@ describe('socket event validation', () => {
       vi.stubGlobal('WebSocket', originalWebSocket);
     }
   });
+
+  it('can suppress the close error for intentional teardown', () => {
+    const originalWebSocket = globalThis.WebSocket;
+    const onEvent = vi.fn();
+    const listeners = new Map<string, () => void>();
+
+    class MockWebSocket {
+      addEventListener(type: string, listener: () => void) {
+        listeners.set(type, listener);
+      }
+    }
+
+    vi.stubGlobal('WebSocket', MockWebSocket as unknown as typeof WebSocket);
+
+    try {
+      createSessionSocket('ws://example.test/session', onEvent, {
+        closeErrorMessage: null,
+      });
+
+      listeners.get('close')?.();
+
+      expect(onEvent).not.toHaveBeenCalled();
+    } finally {
+      vi.stubGlobal('WebSocket', originalWebSocket);
+    }
+  });
+
+  it('evaluates the close error message at close time', () => {
+    const originalWebSocket = globalThis.WebSocket;
+    const onEvent = vi.fn();
+    const listeners = new Map<string, () => void>();
+    let shouldReportClose = false;
+
+    class MockWebSocket {
+      addEventListener(type: string, listener: () => void) {
+        listeners.set(type, listener);
+      }
+    }
+
+    vi.stubGlobal('WebSocket', MockWebSocket as unknown as typeof WebSocket);
+
+    try {
+      createSessionSocket('ws://example.test/session', onEvent, {
+        closeErrorMessage: () => (shouldReportClose ? 'Session connection closed' : null),
+      });
+
+      listeners.get('close')?.();
+      expect(onEvent).not.toHaveBeenCalled();
+
+      shouldReportClose = true;
+      listeners.get('close')?.();
+      expect(onEvent).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'Session connection closed',
+      });
+    } finally {
+      vi.stubGlobal('WebSocket', originalWebSocket);
+    }
+  });
 });

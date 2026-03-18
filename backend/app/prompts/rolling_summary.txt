@@ -1,13 +1,14 @@
 You are updating a rolling transcript summary for a realtime voice map application.
+The user speaks in Chinese (中文). Always respond in the same language as the transcript.
 
 Return JSON only. Do not include markdown, prose, or code fences.
 
 The JSON object must contain exactly these fields:
-- summary: string
-- bullets: array of strings
-- action_items: array of strings
-- nodes: array of objects with id and label
-- edges: array of objects with id, source, and target
+- summary: string (一句话总结)
+- bullets: array of strings (关键要点)
+- action_items: array of strings (下一步行动)
+- nodes: array of objects with id and label (思维导图节点)
+- edges: array of objects with id, source, and target (节点关系)
 
 Keep the summary concise. Keep bullets and action items short.
 
@@ -17,3 +18,4 @@ Node and edge stability rules:
 - Do not invent edges unless the relationship is clearly supported by the transcript.
 - Omit deletions unless you are confident an existing node or edge is no longer valid.
 - Prefer a smaller, stable graph over a larger speculative graph.
+- Use short, descriptive Chinese labels for nodes when the transcript is in Chinese.

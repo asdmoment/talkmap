@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import App from './App';
 import { applySessionEvent, seedSessionState, resetSessionState } from './state/sessionRuntime';
 
@@ -8,7 +9,12 @@ const { createSessionSocket } = vi.hoisted(() => ({
   createSessionSocket: vi.fn(),
 }));
 
-let sessionSocketMock: { close: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> };
+let sessionSocketMock: {
+  addEventListener: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+  send: ReturnType<typeof vi.fn>;
+};
+let sessionSocketListeners: Map<string, Array<() => void>>;
 
 vi.mock('@ricky0123/vad-web', () => ({
   MicVAD: {
@@ -42,21 +48,109 @@ function createMockStream(trackCount = 1): {
 }
 
 describe('App shell', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
     micVadNew.mockReset();
     createSessionSocket.mockReset();
-    sessionSocketMock = { close: vi.fn(), send: vi.fn() };
+    sessionSocketListeners = new Map();
+    sessionSocketMock = {
+      addEventListener: vi.fn((type: string, listener: () => void) => {
+        const listeners = sessionSocketListeners.get(type) ?? [];
+        listeners.push(listener);
+        sessionSocketListeners.set(type, listeners);
+      }),
+      close: vi.fn(() => {
+        sessionSocketListeners.get('close')?.forEach((listener) => {
+          listener();
+        });
+      }),
+      send: vi.fn(),
+    };
     createSessionSocket.mockReturnValue(sessionSocketMock as unknown as WebSocket);
     resetSessionState();
   });
 
-  it('renders three panes and an idle recorder state', () => {
+  it('renders the Chinese personal thought workbench shell', () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { name: /transcript/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /summary/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /mind map/i })).toBeInTheDocument();
-    expect(screen.getByText(/status: idle/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '把你说出口的想法，整理成清晰脉络' })).toBeInTheDocument();
+    expect(screen.getByText('适合一个人长段表达、梳理思路、沉淀下一步行动')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '开始梳理' })).toBeInTheDocument();
+    expect(screen.getByText('当前状态：未开始')).toBeInTheDocument();
+    expect(screen.getByText('本次梳理')).toBeInTheDocument();
+    expect(screen.getByText('思路会随着你的表达逐步成形')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '思路原文' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '整理结果' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '思路脉络' })).toBeInTheDocument();
+  });
+
+  it('shows Chinese thought-workbench status copy', () => {
+    render(<App />);
+
+    expect(screen.getByText('点击开始，记录这一段正在成形的想法')).toBeInTheDocument();
+    expect(screen.getByText('当前状态：未开始')).toBeInTheDocument();
+  });
+
+  it('shows transcript success even when thought organization fails', () => {
+    render(<App />);
+
+    act(() => {
+      applySessionEvent({
+        type: 'committed_transcript',
+        segment: {
+          id: 'utt-1:0',
+          text: '先整理一下明天安排',
+          start_ms: 0,
+          end_ms: 800,
+        },
+      });
+      applySessionEvent({
+        type: 'error',
+        message: 'Thought organization failed: LLM offline',
+      });
+    });
+
+    expect(screen.getByText('先整理一下明天安排')).toBeInTheDocument();
+    expect(screen.getByText('文字已识别，但整理失败')).toBeInTheDocument();
+  });
+
+  it('shows separate transcribing and summarizing states', () => {
+    seedSessionState({
+      sessionId: 'session-8',
+      processingStage: 'transcribing',
+    });
+
+    render(<App />);
+
+    expect(screen.getByText('正在识别语音')).toBeInTheDocument();
+
+    act(() => {
+      applySessionEvent({
+        type: 'committed_transcript',
+        segment: { id: 'utt-1:0', text: '一条已识别文字', start_ms: 0, end_ms: 600 },
+      });
+    });
+
+    expect(screen.getByText('正在整理思路')).toBeInTheDocument();
+  });
+
+  it('shows transport errors even if a processing stage was already active', () => {
+    seedSessionState({
+      sessionId: 'session-8',
+      processingStage: 'transcribing',
+    });
+
+    render(<App />);
+
+    act(() => {
+      applySessionEvent({
+        type: 'error',
+        message: 'Session connection closed',
+      });
+    });
+
+    expect(screen.getByText('当前状态：连接异常')).toBeInTheDocument();
+    expect(screen.getByText('Session connection closed')).toBeInTheDocument();
   });
 
   it('disables the recorder toggle while microphone permission is pending', async () => {
@@ -83,11 +177,11 @@ describe('App shell', () => {
     try {
       render(<App />);
 
-      const toggle = screen.getByRole('button', { name: /start desk/i });
+      const toggle = screen.getByRole('button', { name: '开始梳理' });
       fireEvent.click(toggle);
 
       await waitFor(() => {
-        expect(screen.getByText(/status: requesting/i)).toBeInTheDocument();
+        expect(screen.getByText('当前状态：请求权限中')).toBeInTheDocument();
       });
       expect(toggle).toBeDisabled();
 
@@ -119,10 +213,10 @@ describe('App shell', () => {
     try {
       render(<App />);
 
-      fireEvent.click(screen.getByRole('button', { name: /start desk/i }));
+      fireEvent.click(screen.getByRole('button', { name: '开始梳理' }));
 
       await waitFor(() => {
-        expect(screen.getByText(/status: error/i)).toBeInTheDocument();
+        expect(screen.getByText('当前状态：连接异常')).toBeInTheDocument();
       });
 
       expect(tracks[0].stop).toHaveBeenCalledTimes(1);
@@ -158,7 +252,7 @@ describe('App shell', () => {
 
     render(<App />);
 
-    const transcriptFeed = screen.getByLabelText('Transcript feed');
+    const transcriptFeed = screen.getByLabelText('思路原文');
     const renderedLines = transcriptFeed.querySelectorAll('.transcript-line p');
 
     expect(renderedLines[0]).toHaveTextContent('We have a clean outline for the live pilot.');
@@ -166,10 +260,10 @@ describe('App shell', () => {
     expect(renderedLines[2]).toHaveTextContent('Need to confirm the guest list');
     expect(screen.getByText('We have a clean outline for the live pilot.')).toBeInTheDocument();
     expect(screen.getByText('Need to confirm the guest list')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '一句话总结' })).toBeInTheDocument();
     expect(screen.getByText('The team aligned on the pilot structure and pacing.')).toBeInTheDocument();
     expect(screen.getByText('Owners and deadlines are now visible across the workstream.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Action items' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '下一步行动' })).toBeInTheDocument();
     expect(screen.getByText('Send the venue shortlist before Friday.')).toBeInTheDocument();
   });
 
@@ -227,6 +321,18 @@ describe('App shell', () => {
     expect(screen.getByText('Live node')).toBeInTheDocument();
   });
 
+  it('does not create a second session socket during the initial StrictMode remount', async () => {
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+
+    await waitFor(() => {
+      expect(createSessionSocket).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('shows only the latest live partial when the same partial id is updated', () => {
     render(<App />);
 
@@ -255,7 +361,7 @@ describe('App shell', () => {
       });
     });
 
-    expect(screen.getByText(/status: error/i)).toBeInTheDocument();
+    expect(screen.getByText('当前状态：连接异常')).toBeInTheDocument();
     expect(screen.getByText('Session connection closed')).toBeInTheDocument();
   });
 
@@ -279,10 +385,10 @@ describe('App shell', () => {
     try {
       render(<App />);
 
-      fireEvent.click(screen.getByRole('button', { name: /start desk/i }));
+      fireEvent.click(screen.getByRole('button', { name: '开始梳理' }));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /stop desk/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '结束梳理' })).toBeInTheDocument();
       });
 
       act(() => {
@@ -292,7 +398,7 @@ describe('App shell', () => {
         });
       });
 
-      const stopButton = screen.getByRole('button', { name: /stop desk/i });
+      const stopButton = screen.getByRole('button', { name: '结束梳理' });
       fireEvent.click(stopButton);
 
       expect(tracks[0].stop).toHaveBeenCalledTimes(1);
@@ -325,7 +431,7 @@ describe('App shell', () => {
     try {
       render(<App />);
 
-      fireEvent.click(screen.getByRole('button', { name: /start desk/i }));
+      fireEvent.click(screen.getByRole('button', { name: '开始梳理' }));
 
       await waitFor(() => {
         expect(micVadNew).toHaveBeenCalledTimes(1);
@@ -342,6 +448,46 @@ describe('App shell', () => {
         sample_rate: 16000,
         samples: [0.1, -0.1, 0.2],
       });
+    } finally {
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        mediaDevices: originalMediaDevices,
+      });
+    }
+  });
+
+  it('shows transcribing status after an utterance is queued to the backend', async () => {
+    const { stream } = createMockStream();
+    const getUserMedia = vi.fn(async () => stream);
+    const originalMediaDevices = navigator.mediaDevices;
+    let speechEndCallback: ((audio: Float32Array) => void) | null = null;
+
+    micVadNew.mockImplementationOnce(async (options) => {
+      speechEndCallback = options.onSpeechEnd;
+      return { start: vi.fn(), pause: vi.fn() };
+    });
+
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      mediaDevices: {
+        getUserMedia,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      fireEvent.click(screen.getByRole('button', { name: '开始梳理' }));
+
+      await waitFor(() => {
+        expect(micVadNew).toHaveBeenCalledTimes(1);
+      });
+
+      act(() => {
+        speechEndCallback?.(new Float32Array([0.1, -0.1, 0.2]));
+      });
+
+      expect(screen.getByText('当前状态：正在识别语音')).toBeInTheDocument();
     } finally {
       vi.stubGlobal('navigator', {
         ...navigator,

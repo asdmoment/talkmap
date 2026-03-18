@@ -106,6 +106,8 @@ export function useMicrophone(options: UseMicrophoneOptions = {}): UseMicrophone
   }, [constraints, getUserMedia]);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     return () => {
       mountedRef.current = false;
       stopStream(streamRef.current);

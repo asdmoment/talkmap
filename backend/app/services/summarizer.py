@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
@@ -62,19 +63,27 @@ class RollingSummarizerService:
             / "rolling_summary.txt"
         )
         self._prompt = resolved_prompt_path.read_text(encoding="utf-8")
+        self._last_transcript_hash: str | None = None
+        self._last_result: RollingSummaryResult | None = None
 
     async def summarize(
         self, *, committed_segments: list[CommittedSegment]
     ) -> RollingSummaryResult:
+        transcript = _format_transcript(committed_segments)
+        transcript_hash = hashlib.sha256(transcript.encode()).hexdigest()
+
+        if transcript_hash == self._last_transcript_hash and self._last_result is not None:
+            return self._last_result
+
         payload = RollingSummaryPayload.model_validate(
             await self._client.complete_json(
                 prompt=self._prompt,
-                transcript=_format_transcript(committed_segments),
+                transcript=transcript,
             )
         )
         summary_blocks = _build_summary_blocks(payload)
 
-        return RollingSummaryResult(
+        result = RollingSummaryResult(
             summary=payload.summary,
             bullets=payload.bullets,
             action_items=payload.action_items,
@@ -86,6 +95,10 @@ class RollingSummarizerService:
             ],
             summary_blocks=summary_blocks,
         )
+
+        self._last_transcript_hash = transcript_hash
+        self._last_result = result
+        return result
 
 
 def _format_transcript(committed_segments: list[CommittedSegment]) -> str:

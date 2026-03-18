@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import type { SessionEvent } from '../lib/socket';
-import { createSessionStore, type SessionState } from './sessionStore';
+import { createSessionStore, type ProcessingStage, type SessionState } from './sessionStore';
 
 let store = createSessionStore();
 const listeners = new Set<() => void>();
@@ -43,6 +43,12 @@ export function applySessionEvent(event: SessionEvent) {
 
 export function setSessionSocket(socket: WebSocket | null) {
   sessionSocket = socket;
+}
+
+export function setProcessingStage(processingStage: ProcessingStage) {
+  const nextState = store.setProcessingStage(processingStage);
+  snapshot = nextState;
+  return nextState;
 }
 
 export function getSessionSocket() {

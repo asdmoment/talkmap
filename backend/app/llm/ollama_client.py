@@ -34,7 +34,8 @@ class OllamaClient:
         payload = json.dumps(
             {
                 "model": self._model,
-                "prompt": f"{prompt}\n\nTranscript:\n{transcript}",
+                "system": prompt,
+                "prompt": f"Transcript:\n{transcript}",
                 "stream": False,
                 "format": "json",
             }

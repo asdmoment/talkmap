@@ -281,7 +281,15 @@ export function parseSessionEvent(value: unknown): SessionEvent {
 export function createSessionSocket(
   url: string,
   onEvent: (event: SessionEvent) => void,
+  options: {
+    errorMessage?: string;
+    closeErrorMessage?: string | null | (() => string | null);
+  } = {},
 ): WebSocket {
+  const {
+    errorMessage = 'Session connection error',
+    closeErrorMessage = 'Session connection closed',
+  } = options;
   const socket = new WebSocket(url);
   socket.addEventListener('message', (message) => {
     let event: SessionEvent;
@@ -299,15 +307,26 @@ export function createSessionSocket(
     onEvent(event);
   });
   socket.addEventListener('error', () => {
+    if (!errorMessage) {
+      return;
+    }
+
     onEvent({
       type: 'error',
-      message: 'Session connection error',
+      message: errorMessage,
     });
   });
   socket.addEventListener('close', () => {
+    const resolvedCloseErrorMessage =
+      typeof closeErrorMessage === 'function' ? closeErrorMessage() : closeErrorMessage;
+
+    if (!resolvedCloseErrorMessage) {
+      return;
+    }
+
     onEvent({
       type: 'error',
-      message: 'Session connection closed',
+      message: resolvedCloseErrorMessage,
     });
   });
   return socket;

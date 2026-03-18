@@ -1,13 +1,16 @@
 .DS_Store
 .env
 .env.local
+.claude/
 .venv/
 __pycache__/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 .coverage
 node_modules/
 dist/
 coverage/
 data/
+docs/plans/
 *.tsbuildinfo

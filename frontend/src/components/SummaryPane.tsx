@@ -58,26 +58,26 @@ export function SummaryPane() {
   return (
     <section className="pane summary-pane">
       <div className="pane-header">
-        <p className="section-kicker">Feed B</p>
-        <h2>Summary</h2>
+        <p className="section-kicker">AI 洞察</p>
+        <h2>AI 提纯引擎</h2>
       </div>
       <p className="pane-copy">
-        Rolling notes, bullets, and action items will condense the active conversation into signal.
+        经由 AI 提炼的核心论点、关键高亮与下一步行动指南，洞见即刻展现。
       </p>
-      <div className="pane-surface summary-surface" aria-label="Summary feed">
+      <div className="pane-surface summary-surface" aria-label="AI 提纯引擎">
         {parsedBlocks.length === 0 ? (
-          <p className="summary-empty">No summary blocks yet.</p>
+          <p className="summary-empty">等待神经元网络解析与重构你的深刻洞察...</p>
         ) : (
           <>
             <section className="summary-card summary-card-overview">
-              <p className="summary-label">Overview</p>
-              <h3>Overview</h3>
+              <p className="summary-label">核心脉络</p>
+              <h3>核心脉络</h3>
               <p>{fallbackOverview?.text}</p>
             </section>
 
             {additionalOverviews.length > 0 ? (
               <section className="summary-cluster">
-                <h3>Context notes</h3>
+                <h3>次要特征</h3>
                 <ul className="summary-list">
                   {additionalOverviews.map((block) => (
                     <li key={block.id}>{block.text}</li>
@@ -88,7 +88,7 @@ export function SummaryPane() {
 
             {bullets.length > 0 ? (
               <section className="summary-cluster">
-                <h3>Signal notes</h3>
+                <h3>颗粒高亮</h3>
                 <ul className="summary-list">
                   {bullets.map((block) => (
                     <li key={block.id}>{block.text}</li>
@@ -99,7 +99,7 @@ export function SummaryPane() {
 
             {actions.length > 0 ? (
               <section className="summary-cluster summary-cluster-actions">
-                <h3>Action items</h3>
+                <h3>行动指南</h3>
                 <ul className="summary-list">
                   {actions.map((block) => (
                     <li key={block.id}>{block.text}</li>

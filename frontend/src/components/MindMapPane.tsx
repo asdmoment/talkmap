@@ -17,15 +17,15 @@ export function MindMapPane({ nodes, edges }: MindMapPaneProps) {
   return (
     <section className="pane mindmap-pane">
       <div className="pane-header">
-        <p className="section-kicker">Feed C</p>
-        <h2>Mind Map</h2>
+        <p className="section-kicker">知识图谱</p>
+        <h2>动态思维网络</h2>
       </div>
       <p className="pane-copy">
-        Topics and relationships will branch outward here as the system detects themes and connections.
+        AI 精准捕获复杂概念间的隐秘关联，织就出发散性的结构化图谱。
       </p>
-      <div className="pane-surface constellation-surface" aria-label="Mind map">
+      <div className="pane-surface constellation-surface" aria-label="动态思维网络">
         {layout.nodes.length === 0 ? (
-          <p className="mindmap-empty">Waiting for the first theme to branch into view.</p>
+          <p className="mindmap-empty">正在分析词汇间的引力波，这里将很快孕育你的知识宇宙...</p>
         ) : (
           <>
             <svg

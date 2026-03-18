@@ -84,10 +84,8 @@ class OpenAiCompatibleClient:
             payload={
                 "model": self._model,
                 "messages": [
-                    {
-                        "role": "user",
-                        "content": f"{prompt}\n\nTranscript:\n{transcript}",
-                    }
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": f"Transcript:\n{transcript}"},
                 ],
             },
             timeout_s=self._timeout_s,

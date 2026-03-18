@@ -27,6 +27,7 @@ describe('session store', () => {
       summaryBlocks: [],
       mindmapNodes: [],
       mindmapEdges: [],
+      processingStage: 'idle',
       lastError: null,
     });
     expect(listener).toHaveBeenCalledTimes(1);
@@ -37,6 +38,7 @@ describe('session store', () => {
       summaryBlocks: [],
       mindmapNodes: [],
       mindmapEdges: [],
+      processingStage: 'idle',
       lastError: null,
     });
 
@@ -95,6 +97,7 @@ describe('session store', () => {
       summaryBlocks: [{ id: 'summary-1', text: 'initial summary' }],
       mindmapNodes: [{ id: 'node-1', label: 'Greeting' }],
       mindmapEdges: [{ id: 'edge-1', source: 'node-1', target: 'node-2' }],
+      processingStage: 'idle',
       lastError: null,
     });
   });
@@ -288,6 +291,7 @@ describe('session store', () => {
       summaryBlocks: [{ id: 'summary-1', text: 'Greeting captured' }],
       mindmapNodes: [{ id: 'node-1', label: 'Greeting' }],
       mindmapEdges: [{ id: 'edge-1', source: 'node-1', target: 'node-2' }],
+      processingStage: 'ready',
       lastError: 'Socket disconnected',
     });
   });

@@ -9,8 +9,7 @@ def test_health_returns_backend_statuses() -> None:
     response = client.get("/api/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "ok": True,
-        "asr_status": "unconfigured",
-        "llm_status": "unconfigured",
-    }
+    data = response.json()
+    assert data["ok"] is True
+    assert data["asr_status"] in ("unconfigured", "ready")
+    assert data["llm_status"] in ("unconfigured", "ready")

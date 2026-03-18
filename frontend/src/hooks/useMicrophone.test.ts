@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { StrictMode, createElement, type ReactNode } from 'react';
 import { useMicrophone } from './useMicrophone';
 
 interface MockTrack {
@@ -26,6 +27,27 @@ function createMockStream(trackCount = 1): {
 }
 
 describe('useMicrophone', () => {
+  it('resolves microphone startup after a StrictMode remount', async () => {
+    const { stream } = createMockStream();
+    const getUserMedia = vi.fn(async () => stream);
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(StrictMode, null, children);
+    const { result } = renderHook(() => useMicrophone({ getUserMedia }), { wrapper });
+
+    let startedStream: MediaStream | null = null;
+
+    await act(async () => {
+      startedStream = await result.current.start();
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('ready');
+    });
+
+    expect(startedStream).toBe(stream);
+    expect(result.current.stream).toBe(stream);
+  });
+
   it('requests microphone access lazily and reuses the active stream', async () => {
     const { stream } = createMockStream();
     const getUserMedia = vi.fn(async () => stream);

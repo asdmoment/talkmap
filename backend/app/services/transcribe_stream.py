@@ -1,3 +1,6 @@
+import asyncio
+
+from app.asr.audio_payload import BrowserUtteranceAudio
 from app.asr.base import AsrEngine, TranscriptionSegment
 from app.models import CommittedSegment, PartialSegment
 from app.ws import CommittedTranscriptEvent, PartialTranscriptEvent
@@ -7,10 +10,13 @@ class TranscribeStreamService:
     def __init__(self, engine: AsrEngine) -> None:
         self._engine = engine
 
-    def transcribe_utterance(
-        self, *, audio: object, utterance_id: str
+    async def transcribe_utterance(
+        self, *, audio: list[float], sample_rate: int, utterance_id: str
     ) -> list[PartialTranscriptEvent | CommittedTranscriptEvent]:
-        segments = self._engine.transcribe(audio)
+        audio_payload = BrowserUtteranceAudio(
+            sample_rate=sample_rate, samples=list(audio)
+        )
+        segments = await asyncio.to_thread(self._engine.transcribe, audio_payload)
         events: list[PartialTranscriptEvent | CommittedTranscriptEvent] = []
 
         for index, segment in enumerate(segments):

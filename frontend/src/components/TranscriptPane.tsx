@@ -33,15 +33,15 @@ export function TranscriptPane() {
   return (
     <section className="pane transcript-pane">
       <div className="pane-header">
-        <p className="section-kicker">Feed A</p>
-        <h2>Transcript</h2>
+        <p className="section-kicker">原声映射</p>
+        <h2>你的思维原典</h2>
       </div>
       <p className="pane-copy">
-        Incoming spoken phrases will land here as they stabilize, with partials evolving into committed lines.
+        保留你每一次灵光乍现，未加修饰的原始思绪将在此沉淀。
       </p>
-      <div className="pane-surface pane-surface-ruled transcript-surface" aria-label="Transcript feed">
+      <div className="pane-surface pane-surface-ruled transcript-surface" aria-label="思维原典">
         {orderedCommittedSegments.length === 0 && orderedPartialSegments.length === 0 ? (
-          <p className="transcript-empty">[ idle ] Waiting for the first voice packet.</p>
+          <p className="transcript-empty">等待声波汇聚... 开始你的倾诉吧。</p>
         ) : (
           <>
             {orderedCommittedSegments.map((segment) => (
@@ -58,7 +58,7 @@ export function TranscriptPane() {
             {orderedPartialSegments.map((segment) => (
               <article key={segment.id} className="transcript-line transcript-line-partial">
                 <div className="transcript-meta">
-                  <span className="transcript-live-pill">Live</span>
+                  <span className="transcript-live-pill">进行中</span>
                   <span>{formatTimeRange(segment.start_ms, segment.end_ms)}</span>
                 </div>
                 <p>{segment.text}</p>

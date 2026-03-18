@@ -7,6 +7,13 @@ import type {
   SummaryBlock,
 } from '../lib/socket';
 
+export type ProcessingStage =
+  | 'idle'
+  | 'transcribing'
+  | 'summarizing'
+  | 'transcribed_with_llm_error'
+  | 'ready';
+
 export interface SessionState {
   sessionId: string | null;
   partialSegments: PartialSegment[];
@@ -14,6 +21,7 @@ export interface SessionState {
   summaryBlocks: SummaryBlock[];
   mindmapNodes: MindmapNode[];
   mindmapEdges: MindmapEdge[];
+  processingStage: ProcessingStage;
   lastError: string | null;
 }
 
@@ -26,6 +34,7 @@ const initialState = (): SessionState => ({
   summaryBlocks: [],
   mindmapNodes: [],
   mindmapEdges: [],
+  processingStage: 'idle',
   lastError: null,
 });
 
@@ -37,6 +46,7 @@ function cloneState(state: SessionState): SessionState {
     summaryBlocks: state.summaryBlocks.map((block) => ({ ...block })),
     mindmapNodes: state.mindmapNodes.map((node) => ({ ...node })),
     mindmapEdges: state.mindmapEdges.map((edge) => ({ ...edge })),
+    processingStage: state.processingStage,
     lastError: state.lastError,
   };
 }
@@ -48,7 +58,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
   const notify = () => {
     const snapshot = cloneState(state);
     listeners.forEach((listener) => {
-      listener(cloneState(snapshot));
+      listener(snapshot);
     });
   };
 
@@ -74,6 +84,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
             summaryBlocks: event.snapshot.summary_blocks.map((block) => ({ ...block })),
             mindmapNodes: event.snapshot.mindmap_nodes.map((node) => ({ ...node })),
             mindmapEdges: event.snapshot.mindmap_edges.map((edge) => ({ ...edge })),
+            processingStage: 'idle',
             lastError: null,
           };
           break;
@@ -84,6 +95,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
               ...state.partialSegments.filter((segment) => segment.id !== event.segment.id),
               { ...event.segment },
             ],
+            processingStage: 'transcribing',
             lastError: null,
           };
           break;
@@ -95,6 +107,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
               ...state.committedSegments.filter((segment) => segment.id !== event.segment.id),
               { ...event.segment },
             ],
+            processingStage: 'summarizing',
             lastError: null,
           };
           break;
@@ -102,6 +115,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
           state = {
             ...state,
             summaryBlocks: event.blocks.map((block) => ({ ...block })),
+            processingStage: 'summarizing',
             lastError: null,
           };
           break;
@@ -110,16 +124,32 @@ export function createSessionStore(initial?: Partial<SessionState>) {
             ...state,
             mindmapNodes: event.nodes.map((node) => ({ ...node })),
             mindmapEdges: event.edges.map((edge) => ({ ...edge })),
+            processingStage: 'ready',
             lastError: null,
           };
           break;
         case 'error':
           state = {
             ...state,
+            processingStage:
+              state.committedSegments.length > 0 &&
+              event.message.startsWith('Thought organization failed:')
+                ? 'transcribed_with_llm_error'
+                : state.processingStage,
             lastError: event.message,
           };
           break;
       }
+
+      notify();
+      return cloneState(state);
+    },
+
+    setProcessingStage(processingStage: ProcessingStage): SessionState {
+      state = {
+        ...state,
+        processingStage,
+      };
 
       notify();
       return cloneState(state);

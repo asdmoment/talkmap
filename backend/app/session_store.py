@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import threading
 from pathlib import Path
 
 from .models import (
@@ -19,6 +20,8 @@ class SessionStore:
         self._sessions_dir = self._root_dir / "sessions"
         self._snapshots: dict[str, SessionSnapshot] = {}
         self._snapshot_versions: dict[str, int | None] = {}
+        self._dirty: set[str] = set()
+        self._persist_lock = threading.Lock()
 
     def get_snapshot(self, session_id: str) -> SessionSnapshot:
         current_version = self._get_session_version(session_id)
@@ -48,7 +51,7 @@ class SessionStore:
             if existing.id != segment.id
         ]
         snapshot.partial_segments.append(segment)
-        self._persist(snapshot)
+        self._mark_dirty(session_id)
         return snapshot
 
     def append_committed_segment(
@@ -74,7 +77,7 @@ class SessionStore:
     ) -> SessionSnapshot:
         snapshot = self.get_snapshot(session_id)
         snapshot.summary_blocks = list(blocks)
-        self._persist(snapshot)
+        self._mark_dirty(session_id)
         return snapshot
 
     def replace_mindmap(
@@ -83,7 +86,7 @@ class SessionStore:
         snapshot = self.get_snapshot(session_id)
         snapshot.mindmap_nodes = list(nodes)
         snapshot.mindmap_edges = list(edges)
-        self._persist(snapshot)
+        self._mark_dirty(session_id)
         return snapshot
 
     def append_summary_block(
@@ -110,6 +113,22 @@ class SessionStore:
         self._persist(snapshot)
         return snapshot
 
+    def flush(self, session_id: str | None = None) -> None:
+        """Immediately persist dirty sessions."""
+        with self._persist_lock:
+            if session_id:
+                if session_id in self._dirty and session_id in self._snapshots:
+                    self._persist(self._snapshots[session_id])
+                    self._dirty.discard(session_id)
+            else:
+                for sid in list(self._dirty):
+                    if sid in self._snapshots:
+                        self._persist(self._snapshots[sid])
+                self._dirty.clear()
+
+    def _mark_dirty(self, session_id: str) -> None:
+        self._dirty.add(session_id)
+
     def _persist(self, snapshot: SessionSnapshot) -> None:
         self._sessions_dir.mkdir(parents=True, exist_ok=True)
         session_file = self._sessions_dir / f"{snapshot.session_id}.json"
@@ -128,6 +147,25 @@ class SessionStore:
         self._snapshot_versions[snapshot.session_id] = self._get_session_version(
             snapshot.session_id
         )
+
+    def list_sessions(self) -> list[str]:
+        if not self._sessions_dir.exists():
+            return []
+        return [
+            f.stem
+            for f in sorted(
+                self._sessions_dir.glob("*.json"),
+                key=lambda f: f.stat().st_mtime,
+                reverse=True,
+            )
+        ]
+
+    def delete_session(self, session_id: str) -> None:
+        session_file = self._sessions_dir / f"{session_id}.json"
+        if session_file.exists():
+            session_file.unlink()
+        self._snapshots.pop(session_id, None)
+        self._snapshot_versions.pop(session_id, None)
 
     def _load_snapshot(self, session_id: str) -> SessionSnapshot:
         session_file = self._sessions_dir / f"{session_id}.json"

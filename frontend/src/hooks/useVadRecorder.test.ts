@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { StrictMode, createElement, type ReactNode } from 'react';
 import { useVadRecorder } from './useVadRecorder';
 
 function createMockStream(): MediaStream {
@@ -9,6 +10,30 @@ function createMockStream(): MediaStream {
 }
 
 describe('useVadRecorder', () => {
+  it('starts listening after a StrictMode remount', async () => {
+    const stream = createMockStream();
+    const vad = {
+      start: vi.fn(),
+      pause: vi.fn(),
+    };
+    const createVad = vi.fn(async () => vad);
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(StrictMode, null, children);
+    const { result } = renderHook(() => useVadRecorder({ stream, createVad }), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await result.current.start();
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('listening');
+    });
+
+    expect(vad.start).toHaveBeenCalledTimes(1);
+  });
+
   it('creates MicVAD with the provided stream and forwards lifecycle callbacks', async () => {
     const stream = createMockStream();
     const vad = {
@@ -44,7 +69,12 @@ describe('useVadRecorder', () => {
     });
 
     expect(createVad).toHaveBeenCalledTimes(1);
-    expect(createVad.mock.calls[0][0]).toMatchObject({ stream });
+    expect(createVad.mock.calls[0][0]).toMatchObject({
+      stream,
+      baseAssetPath: '/vad/',
+      onnxWASMBasePath: '/vad/',
+      submitUserSpeechOnPause: true,
+    });
     expect(vad.start).toHaveBeenCalledTimes(1);
     expect(onSpeechStart).toHaveBeenCalledTimes(1);
     expect(onFrameProcessed).toHaveBeenCalledWith([0.2, 0.8], 0.91);

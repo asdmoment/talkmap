@@ -1,7 +1,9 @@
+from datetime import datetime, timezone
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
+from pydantic import BaseModel
 
 from ..config import Settings, get_settings
 from ..models import SessionSnapshot
@@ -17,6 +19,12 @@ def _build_session_store(root_dir: str) -> SessionStore:
 
 def get_session_store(settings: Settings = Depends(get_settings)) -> SessionStore:
     return _build_session_store(settings.data_dir)
+
+
+class SessionListItem(BaseModel):
+    session_id: str
+    created_at: str
+    segment_count: int
 
 
 def _get_persisted_snapshot(store: SessionStore, session_id: str) -> SessionSnapshot:
@@ -86,3 +94,34 @@ def export_session_markdown(
 ) -> PlainTextResponse:
     snapshot = _get_persisted_snapshot(store, session_id)
     return PlainTextResponse(_render_markdown(snapshot))
+
+
+@router.get("/api/sessions")
+def list_sessions(
+    store: SessionStore = Depends(get_session_store),
+) -> list[SessionListItem]:
+    items = []
+    for session_id in store.list_sessions():
+        snapshot = store.get_snapshot(session_id)
+        session_file = store._sessions_dir / f"{session_id}.json"
+        created_at = datetime.fromtimestamp(
+            session_file.stat().st_mtime, tz=timezone.utc
+        ).isoformat()
+        items.append(
+            SessionListItem(
+                session_id=session_id,
+                created_at=created_at,
+                segment_count=len(snapshot.committed_segments),
+            )
+        )
+    return items
+
+
+@router.delete("/api/session/{session_id}")
+def delete_session(
+    session_id: str, store: SessionStore = Depends(get_session_store)
+) -> dict[str, str]:
+    if not store.has_snapshot(session_id):
+        raise HTTPException(status_code=404, detail="Session not found")
+    store.delete_session(session_id)
+    return {"status": "deleted", "session_id": session_id}

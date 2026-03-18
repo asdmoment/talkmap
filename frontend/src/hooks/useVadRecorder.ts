@@ -11,11 +11,16 @@ type FrameProbabilities = unknown;
 
 interface CreateVadOptions {
   stream: MediaStream;
+  baseAssetPath: string;
+  onnxWASMBasePath: string;
+  submitUserSpeechOnPause: boolean;
   onSpeechStart: () => Promise<void> | void;
   onSpeechEnd: (audio: Float32Array) => Promise<void> | void;
   onFrameProcessed: (probabilities: FrameProbabilities, frame: Float32Array) => Promise<void> | void;
   additionalAudioConstraints: MediaTrackConstraints;
 }
+
+const VAD_ASSET_BASE_PATH = '/vad/';
 
 interface UseVadRecorderOptions {
   stream: MediaStream | null;
@@ -105,6 +110,9 @@ export function useVadRecorder({
         if (!vadRef.current || vadStreamRef.current !== activeStream) {
           const nextVad = await createVad({
             stream: activeStream,
+            baseAssetPath: VAD_ASSET_BASE_PATH,
+            onnxWASMBasePath: VAD_ASSET_BASE_PATH,
+            submitUserSpeechOnPause: true,
             onSpeechStart: () => {
               if (mountedRef.current) {
                 setStatus('speaking');
@@ -171,6 +179,8 @@ export function useVadRecorder({
   }, [stream]);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     return () => {
       mountedRef.current = false;
       if (!vadRef.current) {
