@@ -69,3 +69,16 @@ export function resetSessionState() {
   attachStore();
   notifyListeners();
 }
+
+export interface SessionListItem {
+  session_id: string;
+  title: string | null;
+  created_at: string;
+  segment_count: number;
+}
+
+export async function fetchSessionList(): Promise<SessionListItem[]> {
+  const response = await fetch('/api/sessions');
+  if (!response.ok) return [];
+  return response.json();
+}
