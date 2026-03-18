@@ -116,6 +116,7 @@ def get_summarizer_service(
 @router.websocket("/ws/session")
 async def session_websocket(
     websocket: WebSocket,
+    session_id: str | None = None,
     session_store: SessionStore = Depends(get_session_store),
     transcribe_service: Any = Depends(get_transcribe_service),
     summarizer_service: Any = Depends(get_summarizer_service),
@@ -124,7 +125,9 @@ async def session_websocket(
     send_lock = asyncio.Lock()
     summary_tasks: set[asyncio.Task[None]] = set()
     latest_summary_generation = 0
-    session_id = f"session-{uuid4().hex[:8]}"
+
+    if not session_id or not session_store.has_snapshot(session_id):
+        session_id = f"session-{uuid4().hex[:8]}"
 
     async def send_session_event(event: SessionEvent) -> None:
         async with send_lock:
