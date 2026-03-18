@@ -16,6 +16,7 @@ export type ProcessingStage =
 
 export interface SessionState {
   sessionId: string | null;
+  title: string | null;
   partialSegments: PartialSegment[];
   committedSegments: CommittedSegment[];
   summaryBlocks: SummaryBlock[];
@@ -29,6 +30,7 @@ type Listener = (state: SessionState) => void;
 
 const initialState = (): SessionState => ({
   sessionId: null,
+  title: null,
   partialSegments: [],
   committedSegments: [],
   summaryBlocks: [],
@@ -41,6 +43,7 @@ const initialState = (): SessionState => ({
 function cloneState(state: SessionState): SessionState {
   return {
     sessionId: state.sessionId,
+    title: state.title,
     partialSegments: state.partialSegments.map((segment) => ({ ...segment })),
     committedSegments: state.committedSegments.map((segment) => ({ ...segment })),
     summaryBlocks: state.summaryBlocks.map((block) => ({ ...block })),
@@ -79,6 +82,7 @@ export function createSessionStore(initial?: Partial<SessionState>) {
         case 'session_started':
           state = {
             sessionId: event.snapshot.session_id,
+            title: event.snapshot.title ?? null,
             partialSegments: event.snapshot.partial_segments.map((segment) => ({ ...segment })),
             committedSegments: event.snapshot.committed_segments.map((segment) => ({ ...segment })),
             summaryBlocks: event.snapshot.summary_blocks.map((block) => ({ ...block })),
@@ -127,6 +131,9 @@ export function createSessionStore(initial?: Partial<SessionState>) {
             processingStage: 'ready',
             lastError: null,
           };
+          break;
+        case 'title_updated':
+          state = { ...state, title: event.title };
           break;
         case 'error':
           state = {

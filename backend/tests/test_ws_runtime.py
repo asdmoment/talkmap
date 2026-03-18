@@ -170,6 +170,7 @@ def test_session_websocket_processes_utterances_and_persists_runtime_updates(
 
             partial_event = websocket.receive_json()
             committed_event = websocket.receive_json()
+            title_event = websocket.receive_json()
             summary_event = websocket.receive_json()
             graph_event = websocket.receive_json()
     finally:
@@ -192,6 +193,10 @@ def test_session_websocket_processes_utterances_and_persists_runtime_updates(
             "start_ms": 0,
             "end_ms": 900,
         },
+    }
+    assert title_event == {
+        "type": "title_updated",
+        "title": "Test Title",
     }
     assert summary_event == {
         "type": "summary_updated",

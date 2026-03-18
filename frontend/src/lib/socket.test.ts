@@ -20,6 +20,7 @@ describe('socket event validation', () => {
       session_id: 'session-1',
       snapshot: {
         session_id: 'session-1',
+        title: null,
         partial_segments: [],
         committed_segments: [],
         summary_blocks: [],

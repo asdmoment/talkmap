@@ -4,6 +4,7 @@ export type SessionEventType =
   | 'committed_transcript'
   | 'summary_updated'
   | 'graph_updated'
+  | 'title_updated'
   | 'error';
 
 export interface PartialSegment {
@@ -38,6 +39,7 @@ export interface MindmapEdge {
 
 export interface SessionSnapshot {
   session_id: string;
+  title: string | null;
   partial_segments: PartialSegment[];
   committed_segments: CommittedSegment[];
   summary_blocks: SummaryBlock[];
@@ -72,6 +74,11 @@ export interface GraphUpdatedEvent {
   edges: MindmapEdge[];
 }
 
+export interface TitleUpdatedEvent {
+  type: 'title_updated';
+  title: string;
+}
+
 export interface ErrorEvent {
   type: 'error';
   message: string;
@@ -83,6 +90,7 @@ export type SessionEvent =
   | CommittedTranscriptEvent
   | SummaryUpdatedEvent
   | GraphUpdatedEvent
+  | TitleUpdatedEvent
   | ErrorEvent;
 
 export interface UtteranceMessage {
@@ -154,6 +162,7 @@ function isSessionSnapshot(value: unknown): value is SessionSnapshot {
   return (
     isRecord(value) &&
     isString(value.session_id) &&
+    (value.title === null || value.title === undefined || isString(value.title)) &&
     isArrayOf(value.partial_segments, isPartialSegment) &&
     isArrayOf(value.committed_segments, isCommittedSegment) &&
     isArrayOf(value.summary_blocks, isSummaryBlock) &&
@@ -205,6 +214,7 @@ function toMindmapEdge(edge: MindmapEdge): MindmapEdge {
 function toSessionSnapshot(snapshot: SessionSnapshot): SessionSnapshot {
   return {
     session_id: snapshot.session_id,
+    title: snapshot.title ?? null,
     partial_segments: snapshot.partial_segments.map(toPartialSegment),
     committed_segments: snapshot.committed_segments.map(toCommittedSegment),
     summary_blocks: snapshot.summary_blocks.map(toSummaryBlock),
@@ -263,6 +273,11 @@ export function parseSessionEvent(value: unknown): SessionEvent {
           nodes: value.nodes.map(toMindmapNode),
           edges: value.edges.map(toMindmapEdge),
         };
+      }
+      break;
+    case 'title_updated':
+      if (isString(value.title)) {
+        return { type: 'title_updated', title: value.title };
       }
       break;
     case 'error':

@@ -22,6 +22,7 @@ describe('session store', () => {
 
     expect(store.getState()).toEqual({
       sessionId: 'session-from-snapshot',
+      title: null,
       partialSegments: [],
       committedSegments: [],
       summaryBlocks: [],
@@ -33,6 +34,7 @@ describe('session store', () => {
     expect(listener).toHaveBeenCalledTimes(1);
     expect(listener).toHaveBeenCalledWith({
       sessionId: 'session-from-snapshot',
+      title: null,
       partialSegments: [],
       committedSegments: [],
       summaryBlocks: [],
@@ -92,6 +94,7 @@ describe('session store', () => {
 
     expect(store.getState()).toEqual({
       sessionId: 'session-1',
+      title: null,
       partialSegments: [{ id: 'partial-1', text: 'hello', start_ms: 0, end_ms: 100 }],
       committedSegments: [],
       summaryBlocks: [{ id: 'summary-1', text: 'initial summary' }],
@@ -284,6 +287,7 @@ describe('session store', () => {
 
     expect(store.getState()).toEqual({
       sessionId: 'session-1',
+      title: null,
       partialSegments: [],
       committedSegments: [
         { id: 'partial-1', text: 'hello world', start_ms: 0, end_ms: 300 },

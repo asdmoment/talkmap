@@ -48,6 +48,11 @@ class GraphUpdatedEvent(BaseModel):
     edges: list[MindmapEdge]
 
 
+class TitleUpdatedEvent(BaseModel):
+    type: Literal["title_updated"] = "title_updated"
+    title: str
+
+
 class ErrorEvent(BaseModel):
     type: Literal["error"] = "error"
     message: str
@@ -66,6 +71,7 @@ SessionEvent = (
     | CommittedTranscriptEvent
     | SummaryUpdatedEvent
     | GraphUpdatedEvent
+    | TitleUpdatedEvent
     | ErrorEvent
 )
 
@@ -155,6 +161,7 @@ async def session_websocket(
 
         session_store.replace_summary_blocks(session_id, summary_result.summary_blocks)
         session_store.set_title(session_id, summary_result.title)
+        await send_session_event(TitleUpdatedEvent(title=summary_result.title))
         session_store.replace_mindmap(
             session_id,
             summary_result.nodes,
