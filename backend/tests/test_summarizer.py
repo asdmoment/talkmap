@@ -75,7 +75,7 @@ async def test_summarizer_returns_validated_result_and_events() -> None:
 
     assert client.calls == [
         {
-            "prompt": Path("backend/app/prompts/rolling_summary.txt").read_text(),
+            "prompt": (Path(__file__).resolve().parent.parent / "app" / "prompts" / "rolling_summary.txt").read_text(),
             "transcript": (
                 "[utt-1:0] We should finalize the launch timeline.\n"
                 "[utt-1:1] Sam will send a recap and we need to review the risks."
